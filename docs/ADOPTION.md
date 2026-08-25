@@ -13,10 +13,15 @@ connector deployable, and the rebuild was used to fix the accumulated bugs prope
 
   | subchart | image | default tag |
   |---|---|---|
-  | splunk-kubernetes-logging | `ephico2real/fluentd-hec` | `1.3.3-h2-curl-gfe7186e` |
-  | splunk-kubernetes-objects | `ephico2real/kube-objects` | `1.2.3-h2-curl-g313d303` |
-  | splunk-kubernetes-metrics | `ephico2real/k8s-metrics` | `1.2.3-h1-g97015ed` |
-  | splunk-kubernetes-metrics (imageAgg) | `ephico2real/k8s-metrics-aggr` | `1.2.3-h1-g3231765` |
+  | splunk-kubernetes-logging | `ephico2real/fluentd-hec` | `1.3.3-h3-curl-g6b756f8` |
+  | splunk-kubernetes-objects | `ephico2real/kube-objects` | `1.2.3-h3-curl-g05cae77` |
+  | splunk-kubernetes-metrics | `ephico2real/k8s-metrics` | `1.2.3-h2-g2941b26` |
+  | splunk-kubernetes-metrics (imageAgg) | `ephico2real/k8s-metrics-aggr` | `1.2.3-h2-gd094a71` |
+
+  The current pass carries the relocked gem set (cgi 0.3.7, json-jwt 1.15.3.1, mail 2.9.1 — see
+  each repo's `docs/RELOCK-2026-08-25.md`): **one scanner finding per image remains**, the base
+  layer's bundled `json` default gem (Low), closeable only by a Red Hat base rebuild. Earlier
+  passes stay frozen as published.
 
   Three flavors exist for the logging/objects images, all from the same commit and all noted
   inline at every tag site in the values files: `h2-curl` (default — jq + minimal shell +
