@@ -312,23 +312,10 @@ data:
         </exclude>
       </filter>
       # extract pod_uid and container_name for CRIO runtime
-      #
-      # record_transformer, NOT jq_transformer. fluent-plugin-jq spawns the jq BINARY through a
-      # SHELL (IO.popen("jq ... 2>&1")) and the hardened runtime image deliberately ships neither —
-      # the pod died at config time with "No such file or directory - jq". jq's capture() becomes a
-      # ruby regex extraction per field; a non-matching source yields nil fields where jq would have
-      # errored the record, which is the kinder behavior.
       {{- if eq .Values.containers.logFormatType "cri" }}
       <filter tail.containers.var.log.pods.**>
-        @type record_transformer
-        enable_ruby
-        <record>
-          pod_uid ${record["source"] && record["source"][%r{/var/log/pods/([^/]+)/[^/]+/[0-9]+\.log}, 1]}
-          container_name ${record["source"] && record["source"][%r{/var/log/pods/[^/]+/([^/]+)/[0-9]+\.log}, 1]}
-          container_retry ${record["source"] && record["source"][%r{/var/log/pods/[^/]+/[^/]+/([0-9]+)\.log}, 1]}
-          sourcetype {{ .Values.sourcetypePrefix }}:container:${record["source"] && record["source"][%r{/var/log/pods/[^/]+/([^/]+)/[0-9]+\.log}, 1]}
-          splunk_index {{ or .Values.global.splunk.hec.indexName .Values.splunk.hec.indexName | default "main" }}
-        </record>
+        @type jq_transformer
+        jq '.record | . + (.source | capture("/var/log/pods/(?<pod_uid>[^/]+)/(?<container_name>[^/]+)/(?<container_retry>[0-9]+).log")) | .sourcetype = ("{{ .Values.sourcetypePrefix }}:container:" + .container_name) | .splunk_index = {{ or .Values.global.splunk.hec.indexName .Values.splunk.hec.indexName | default "main" | quote }}'
       </filter>
       {{- end }}
 
@@ -345,26 +332,10 @@ data:
       {{- end }}
 
       # create source and sourcetype
-      #
-      # record_transformer, NOT jq_transformer, in the three filters below — fluent-plugin-jq spawns
-      # the jq BINARY through a SHELL and the hardened runtime ships neither; the pod died at config
-      # time with "No such file or directory - jq". jq's `.tag | ltrimstr(...)` becomes ruby
-      # tag.sub(/^prefix/, ""); statics stay static.
       {{- if $checks.hasJournald }}
       <filter journald.**>
-        @type record_transformer
-        enable_ruby
-        <record>
-          source {{ .Values.journalLogPath }}/${record["source"]}
-          sourcetype ${tag.sub(/^journald\./, "")}
-          cluster_name {{ or .Values.kubernetes.clusterName .Values.global.kubernetes.clusterName | default "cluster_name" }}
-          splunk_index {{ or .Values.global.splunk.hec.indexName .Values.splunk.hec.indexName | default "main" }}
-          {{- if .Values.customMetadata }}
-          {{- range .Values.customMetadata }}
-          {{ .name }} {{ .value }}
-          {{- end }}
-          {{- end }}
-        </record>
+        @type jq_transformer
+        jq '.record.source = "{{ .Values.journalLogPath }}/" + .record.source | .record.sourcetype = (.tag | ltrimstr("journald.")) | .record.cluster_name = "{{ or .Values.kubernetes.clusterName .Values.global.kubernetes.clusterName | default "cluster_name" }}" | .record.splunk_index = {{ or .Values.global.splunk.hec.indexName .Values.splunk.hec.indexName | default "main" | quote }} {{- if .Values.customMetadata }}{{- range .Values.customMetadata }}| .record.{{ .name }} = "{{ .value }}" {{- end }}{{- end }} |.record'
       </filter>
       {{- end }}
 
@@ -372,35 +343,15 @@ data:
       {{- if $checks.hasFileLog }}
       # extract sourcetype
       <filter tail.file.**>
-        @type record_transformer
-        enable_ruby
-        <record>
-          sourcetype ${tag.sub(/^tail\.file\./, "")}
-          cluster_name {{ or .Values.kubernetes.clusterName .Values.global.kubernetes.clusterName | default "cluster_name" }}
-          splunk_index {{ or .Values.global.splunk.hec.indexName .Values.splunk.hec.indexName | default "main" }}
-          {{- if .Values.customMetadata }}
-          {{- range .Values.customMetadata }}
-          {{ .name }} {{ .value }}
-          {{- end }}
-          {{- end }}
-        </record>
+        @type jq_transformer
+        jq '.record.sourcetype = (.tag | ltrimstr("tail.file.")) | .record.cluster_name = "{{ or .Values.kubernetes.clusterName .Values.global.kubernetes.clusterName | default "cluster_name" }}" | .record.splunk_index = {{ or .Values.global.splunk.hec.indexName .Values.splunk.hec.indexName | default "main" | quote }} {{- if .Values.customMetadata }}{{- range .Values.customMetadata }}| .record.{{ .name }} = "{{ .value }}" {{- end }}{{- end }} | .record'
       </filter>
       {{- end }}
       {{- if .Values.global.monitoring_agent_enabled }}
       # = filters for monitor agent =
       <filter monitor_agent>
-        @type record_transformer
-        <record>
-          source "namespace:#{ENV['MY_NAMESPACE']}/pod:#{ENV['MY_POD_NAME']}"
-          sourcetype fluentd:monitor-agent
-          cluster_name {{ or .Values.kubernetes.clusterName .Values.global.kubernetes.clusterName | default "cluster_name" }}
-          splunk_index {{ or .Values.global.monitoring_agent_index_name .Values.global.splunk.hec.indexName .Values.splunk.hec.indexName | default "main" }}
-          {{- if .Values.customMetadata }}
-          {{- range .Values.customMetadata }}
-          {{ .name }} {{ .value }}
-          {{- end }}
-          {{- end }}
-        </record>
+        @type jq_transformer
+        jq ".record.source = \"namespace:#{ENV['MY_NAMESPACE']}/pod:#{ENV['MY_POD_NAME']}\" | .record.sourcetype = \"fluentd:monitor-agent\" | .record.cluster_name = \"{{ or .Values.kubernetes.clusterName .Values.global.kubernetes.clusterName | default "cluster_name" }}\" | .record.splunk_index = \"{{ or .Values.global.monitoring_agent_index_name .Values.global.splunk.hec.indexName .Values.splunk.hec.indexName | default "main" }}\" {{- if .Values.customMetadata }}{{- range .Values.customMetadata }}| .record.{{ .name }} = \"{{ .value }}\" {{- end }}{{- end }} | .record"
       </filter>
       {{- end }}
       # = custom filters specified by users =
