@@ -20,7 +20,6 @@ splunk-kubernetes-logging:
     hec:
       indexName: ci_events
   image:
-    name: splunk/fluentd-hec
     pullPolicy: Always
   k8sMetadata:
     podLabels:
@@ -44,11 +43,7 @@ splunk-kubernetes-metrics:
     hec:
       indexName: ci_metrics
   image:
-    name: splunk/k8s-metrics
     pullPolicy: Always
-  imageAgg:
-    name: splunk/k8s-metrics-aggr
-
 splunk-kubernetes-objects:
   splunk:
     hec:
@@ -57,6 +52,5 @@ splunk-kubernetes-objects:
     insecureSSL: true
     clusterName: "ci-k8s-cluster-objects"
   image:
-    name: splunk/kube-objects
     pullPolicy: Always
 
