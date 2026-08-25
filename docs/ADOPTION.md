@@ -33,6 +33,13 @@ connector deployable, and the rebuild was used to fix the accumulated bugs prope
   Splunk 10 (General Terms acceptance, non-root, a sudoers drop-in for a measured PAM failure on
   GitHub runners).
 
+## Functional-test state
+
+The resurrected suite runs **green**: 189 passed, 0 failed, 76 skipped (55 upstream skips + 21
+cAdvisor metrics that containerd runtimes do not provide — skipped explicitly in
+`test/k8s_metrics_tests/test_metric_plugin.py` with the verification recorded in the comment;
+the scraper pod's logs were checked clean to rule out scrape failures before skipping).
+
 ## Branch map
 
 | branch | contents |
