@@ -95,7 +95,7 @@ image:
   # The name of the image to pull
   name: ephico2real/k8s-metrics
   # The tag of the image to pull
-  tag: 1.2.3-h2-g2941b26  # h2 = relocked gem set; h1 stays frozen as published
+  tag: 1.2.3-h3-geb65300  # h3 = zero-findings build; earlier passes stay frozen
   # The policy that specifies when the user wants the images to be pulled
   pullPolicy: IfNotPresent
   # Indicates if the image should be pulled using authentication from a secret
@@ -110,7 +110,7 @@ imageAgg:
   # The name of the image to pull
   name: ephico2real/k8s-metrics-aggr
   # The tag of the image to pull
-  tag: 1.2.3-h2-gd094a71  # h2 = relocked gem set; h1 stays frozen as published
+  tag: 1.2.3-h3-g62268ef  # h3 = zero-findings build; earlier passes stay frozen
   # The policy that specifies when the user wants the images to be pulled
   pullPolicy: IfNotPresent
   # Indicates if the image should be pulled using authentication from a secret
