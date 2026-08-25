@@ -11,12 +11,20 @@ connector deployable, and the rebuild was used to fix the accumulated bugs prope
   (mirrored with identical digests at `quay.io/ephico2real/*`), replacing the deleted `splunk/*`
   references. Current defaults:
 
-  | subchart | image | tag |
+  | subchart | image | default tag |
   |---|---|---|
-  | splunk-kubernetes-logging | `ephico2real/fluentd-hec` | `1.3.3-h2-g1f6f8fb` |
-  | splunk-kubernetes-objects | `ephico2real/kube-objects` | `1.2.3-h2-g7cbf93d` |
+  | splunk-kubernetes-logging | `ephico2real/fluentd-hec` | `1.3.3-h2-curl-gfe7186e` |
+  | splunk-kubernetes-objects | `ephico2real/kube-objects` | `1.2.3-h2-curl-g313d303` |
   | splunk-kubernetes-metrics | `ephico2real/k8s-metrics` | `1.2.3-h1-g97015ed` |
   | splunk-kubernetes-metrics (imageAgg) | `ephico2real/k8s-metrics-aggr` | `1.2.3-h1-g3231765` |
+
+  Three flavors exist for the logging/objects images, all from the same commit and all noted
+  inline at every tag site in the values files: `h2-curl` (default — jq + minimal shell +
+  curl/cat/ls debug tools; measured +8 MB, zero additional scanner findings), plain `h2`
+  (jq + shell, no debug tools), and `h1` (fully shell-less, for jq-free configs). The metrics
+  pair deliberately stays on the shell-less `h1` — its configs never needed a shell, every
+  node already carries a curl-capable logging pod for connectivity debugging, and the pristine
+  minimal runtime is the point.
 
   `h1` is the fully shell-less hardened pass; `h2` (logging/objects) additionally carries jq and a
   minimal shell because their rendered config uses `jq_transformer`, which executes the external
