@@ -182,19 +182,11 @@ splunk:
     # indexRouting is a boolean, it indicates whether user wants to route logs to the index with name specified by the user using customFilters. Default is false.
     # If you want to use this feature you will have to set the index key for the record using customFilters.
     # For example,
-    # MODIFIED (hardened images): this example previously showed jq_transformer. fluent-plugin-jq
-    # launches the external jq BINARY through a SHELL, and the default hardened images ship
-    # neither, so a jq-based custom filter fails at pod startup ("No such file or directory - jq").
-    # The original example is preserved verbatim in old-jq-values.yaml alongside this file; the
-    # jq-capable image variants (fluentd-hec/kube-objects, -jq builds) support raw jq filters.
     # customFilters:
     #   SetIndexFilter:
     #     tag: tail.containers.**
-    #     type: record_transformer
-    #     body: |
-    #       <record>
-    #         index my_awesome_index
-    #       </record>
+    #     type: jq_transformer
+    #     body: jq '.record.index = "my_awesome_index" | .record'
     indexRouting:
     # Indicates if 4xx errors should consume chunk. If set to true, plugin will not retry sending chunk to splunk when 4xx error occurs. (Default: true)
     consume_chunk_on_4xx_errors: 
@@ -289,28 +281,18 @@ affinity: {}
 # = definition of the fluentd filter =
 # This defines the body/logic for using the filter for record manipulation.
 #
-# MODIFIED (hardened images): this example previously showed jq_transformer. fluent-plugin-jq
-# launches the external jq BINARY through a SHELL, and the default hardened images ship
-# neither, so a jq-based custom filter fails at pod startup ("No such file or directory - jq").
-# The original example is preserved verbatim in old-jq-values.yaml alongside this file; the
-# jq-capable image variants (fluentd-hec/kube-objects, -jq builds) support raw jq filters.
 # For example if you want to define a filter which sets cluster_name field to "my_awesome_cluster" you would the following filter
 # <filter tail.containers.**>
-#  @type record_transformer
-#  <record>
-#    cluster_name my_awesome_cluster
-#  </record>
+#  @type jq_transformer
+#  jq '.record.cluster_name = "my_awesome_cluster" | .record'
 # </filter>
 # This can be defined in the customFilters section as follows:
 # ```
 # customFilters:
 #   NamespaceSourcetypeFilter:
 #     tag: tail.containers.**
-#     type: record_transformer
-#     body: |
-#       <record>
-#         cluster_name my_awesome_cluster
-#       </record>
+#     type: jq_transformer
+#     body: jq '.record.cluster_name = "my_awesome_cluster" | .record'
 # ```
 customFilters: {}
 #

@@ -449,28 +449,18 @@ customMetadataAnnotations:
 # = definition of the fluentd filter =
 # This defines the body/logic for using the filter for record manipulation.
 #
-# MODIFIED (hardened images): this example previously showed jq_transformer. fluent-plugin-jq
-# launches the external jq BINARY through a SHELL, and the default hardened images ship
-# neither, so a jq-based custom filter fails at pod startup ("No such file or directory - jq").
-# The original example is preserved verbatim in old-jq-values.yaml alongside this file; the
-# jq-capable image variants (fluentd-hec/kube-objects, -jq builds) support raw jq filters.
 # For example if you want to define a filter which sets cluster_name field to "my_awesome_cluster" you would the following filter
 # <filter tail.containers.**>
-#  @type record_transformer
-#  <record>
-#    cluster_name my_awesome_cluster
-#  </record>
+#  @type jq_transformer
+#  jq '.record.cluster_name = "my_awesome_cluster" | .record'
 # </filter>
 # This can be defined in the customFilters section as follows:
 # ```
 # customFilters:
 #   NamespaceSourcetypeFilter:
 #     tag: tail.containers.**
-#     type: record_transformer
-#     body: |
-#       <record>
-#         cluster_name my_awesome_cluster
-#       </record>
+#     type: jq_transformer
+#     body: jq '.record.cluster_name = "my_awesome_cluster" | .record'
 # ```
 customFilters: {}
 
