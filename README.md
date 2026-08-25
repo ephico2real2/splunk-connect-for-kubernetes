@@ -1,6 +1,17 @@
-# End of Support and Repository Archive
+---
 
-**Important:** Splunk Connect for Kubernetes reached End of Support on *January 1, 2024*. This repository has been archived and is read-only. It no longer receives updates from Splunk and is no longer supported by Splunk. Splunk recommends migrating to [Splunk OpenTelemetry Collector for Kubernetes](https://github.com/signalfx/splunk-otel-collector-chart). Please refer to this [migration guide](https://github.com/signalfx/splunk-otel-collector-chart/blob/main/docs/migration-from-sck.md) for more details.
+> **ADOPTED FORK — actively maintained.** Upstream `splunk/splunk-connect-for-kubernetes` reached
+> End of Support on 2024-01-01, was archived on 2025-06-24, and its four published images were
+> deleted from Docker Hub — breaking every existing install on its next image pull. This fork was
+> adopted to keep the connector deployable and to fix the accumulated bugs: the chart pins rebuilt,
+> hardened images (published to Docker Hub and Quay with verified-identical digests), and the
+> functional-test environment runs again end to end. **What changed, current image pins, and the
+> branch map: [docs/ADOPTION.md](docs/ADOPTION.md).** (Splunk's own recommendation for new
+> deployments remains the [OpenTelemetry Collector for
+> Kubernetes](https://github.com/signalfx/splunk-otel-collector-chart); this fork is for
+> installations that need Splunk Connect for Kubernetes itself to keep working.)
+
+---
 
 # What does Splunk Connect for Kubernetes do?
 
