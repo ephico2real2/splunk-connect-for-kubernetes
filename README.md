@@ -1,5 +1,3 @@
----
-
 > **ADOPTED FORK — actively maintained.** Upstream `splunk/splunk-connect-for-kubernetes` reached
 > End of Support on 2024-01-01, was archived on 2025-06-24, and its four published images were
 > deleted from Docker Hub — breaking every existing install on its next image pull. This fork was
