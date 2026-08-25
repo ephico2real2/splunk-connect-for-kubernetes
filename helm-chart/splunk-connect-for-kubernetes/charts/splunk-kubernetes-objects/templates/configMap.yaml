@@ -90,43 +90,21 @@ data:
 
     {{- if .Values.global.monitoring_agent_enabled }}
     # = filters for monitor agent =
-    # record_transformer, NOT jq_transformer. fluent-plugin-jq spawns the jq BINARY through a
-    # SHELL (IO.popen("jq ... 2>&1")) and the hardened runtime image deliberately ships neither —
-    # the pod died at config time with "No such file or directory - jq". Same enrichment, no
-    # subprocess: statics stay static, and "#{ENV[...]}" is fluentd config-time interpolation,
-    # equivalent to jq's env.* because the pod's env is constant for its lifetime.
     <filter monitor_agent>
-      @type record_transformer
-      <record>
-        source "namespace:#{ENV['MY_NAMESPACE']}/pod:#{ENV['MY_POD_NAME']}"
-        sourcetype fluentd:monitor-agent
-        cluster_name {{ or .Values.kubernetes.clusterName .Values.global.kubernetes.clusterName | default "cluster_name" }}
-        splunk_index {{ or .Values.global.monitoring_agent_index_name .Values.global.splunk.hec.indexName .Values.splunk.hec.indexName | default "main" }}
-        {{- if .Values.customMetadata }}
-        {{- range .Values.customMetadata }}
-        {{ .name }} {{ .value }}
-        {{- end }}
-        {{- end }}
-      </record>
+      @type jq_transformer
+      jq ".record.source = \"namespace:#{ENV['MY_NAMESPACE']}/pod:#{ENV['MY_POD_NAME']}\" | .record.sourcetype = \"fluentd:monitor-agent\" | .record.cluster_name = \"{{ or .Values.kubernetes.clusterName .Values.global.kubernetes.clusterName | default "cluster_name" }}\" | .record.splunk_index = \"{{ or .Values.global.monitoring_agent_index_name .Values.global.splunk.hec.indexName .Values.splunk.hec.indexName | default "main" }}\" {{- if .Values.customMetadata }}{{- range .Values.customMetadata }}| .record.{{ .name }} = \"{{ .value }}\" {{- end }}{{- end }} | .record"
     </filter>
     {{- end }}
 
-    # jq's `.tag | gsub("\\."; ":")` becomes ruby tag.gsub — same dot-to-colon sourcetype. See the
-    # monitor_agent comment above for why jq_transformer cannot run on the hardened images.
     <filter kube.**>
-      @type record_transformer
-      enable_ruby
-      <record>
-        source "namespace:#{ENV['MY_NAMESPACE']}/pod:#{ENV['MY_POD_NAME']}"
-        sourcetype ${tag.gsub('.', ':')}
-      </record>
+      @type jq_transformer
+      # in ruby '\\' will escape and become just '\', since we need two '\' in the `gsub` jq filter, it becomes '\\\\'.
+      jq '.record.source = "namespace:\(env.MY_NAMESPACE)/pod:\(env.MY_POD_NAME)" | .record.sourcetype = (.tag | gsub("\\\\."; ":")) | .record'
     </filter>
 
     <filter kube.**>
-      @type record_transformer
-      <record>
-        cluster_name {{ or .Values.kubernetes.clusterName .Values.global.kubernetes.clusterName }}
-      </record>
+      @type jq_transformer
+      jq '.record.cluster_name = "{{ or .Values.kubernetes.clusterName .Values.global.kubernetes.clusterName }}" | .record'
     </filter>
 
     # = custom filters specified by users =
