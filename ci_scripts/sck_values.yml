@@ -8,6 +8,11 @@ global:
       token: $CI_SPLUNK_HEC_TOKEN
 
 splunk-kubernetes-logging:
+  # cri, NOT json: CI minikube runs the containerd runtime, whose container logs are CRI-format
+  # ("<rfc3339> stdout P <msg>"). With the default json parser every line fails ("pattern not
+  # matched") and zero container events reach Splunk. Verified both ways on a live cluster.
+  containers:
+    logFormatType: cri
   kubernetes:
     insecureSSL: true
     clusterName: "ci-k8s-cluster"
