@@ -105,7 +105,11 @@ splunk-kubernetes-logging:
     # Final volume destination of container log symlinks
     pathDest: /var/lib/docker/containers
     # Log format type, "json" or "cri"
-    logFormatType: json
+    # cri BY DEFAULT (changed from upstream's json, deliberately): every supported cluster since
+    # dockershim's removal in Kubernetes 1.24 runs a CRI runtime (containerd, CRI-O), whose container
+    # logs are CRI-format — with json, the parser matches nothing and zero container events reach
+    # Splunk (measured). Set json only for a legacy docker-runtime cluster.
+    logFormatType: cri
     # Specify the logFormat for "cri" logFormatType - provide time format
     # For example "%Y-%m-%dT%H:%M:%S.%N%:z" for openshift, "%Y-%m-%dT%H:%M:%S.%NZ" for IBM IKS
     # Default for "cri": "%Y-%m-%dT%H:%M:%S.%N%:z"
